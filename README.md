@@ -45,10 +45,10 @@ cmake --build build
 ```
 
 > [!NOTE]
-> The `-o/--output` flag is not yet implemented and currently has no effect.<br>
+> The `-o/--output` flag is not yet implemented and currently has no effect.  
 > Run with `-h` or `--help` for more details.
 
 ## License
-This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), and its file can be found [here](LICENSE).
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), and its file can be found [here](LICENSE).  
 [CLI11](https://github.com/CLIUtils/CLI11) is distributed under a [custom license](https://github.com/CLIUtils/CLI11/blob/main/LICENSE), which is also included [here](libs/CLI11/LICENSE).
 
