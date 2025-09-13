@@ -28,7 +28,6 @@ cmake --build build
 
 5. Run the program:
 > [!NOTE]
-> Single quotes, double quotes, backticks, and tildes are not yet supported. They will appear as placeholders.<br>
 > The ``--scroll/-s`` and ``--output/-o`` flags have not yet been implemented, they will have no affect.<br>
 > Run with the `-h` or `--help` flag for more details.
 
