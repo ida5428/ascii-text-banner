@@ -1,5 +1,5 @@
 <div align="center">
-   <img src="assets/ascii-text-banner.gif" alt="ascii-text-banner preview">
+   <img src="assets/ascii-text-banner.gif" alt="ascii-text-banner preview" width=600>
 </div>
 
 # ascii-text-banner
@@ -8,7 +8,6 @@ A lightweight C++ command-line tool for generating ASCII text banners.
 ## Features
 - Render text into ASCII art
 - Optional scrolling effect
-- More features such as outputting files and multiple fonts coming soon!
 - Upcoming features: file output and support for multiple built-in and custom fonts!
 
 ## Dependencies
