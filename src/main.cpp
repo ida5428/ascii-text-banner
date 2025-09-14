@@ -6,6 +6,8 @@
 #include <array>
 #include <thread>
 #include <chrono>
+#include <fstream>
+#include <filesystem>
 
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -24,56 +26,87 @@ std::vector<std::string> splitString(const std::string& text, char delimiter) {
    return tokens;
 }
 
-void printNormalBanner(std::string inputText, int maxWidth) {
-   std::array<std::string, 7> lines;
+std::vector<std::string> buildStaticBanner(std::string inputText, int maxWidth) {
+   std::array<std::string, 7> bannerLines;
+   std::vector<std::string> fullBanner;
    int currentLineWidth = 0;
 
-   for (char textChar : inputText) {
-      char inputText = std::tolower(textChar);
-      std::string asciiChar = ascii::character[inputText];
+   for (char inputChar : inputText) {
+      std::string asciiChar = ascii::character[inputChar];
       std::vector<std::string> asciiCharLines = splitString(asciiChar, '\n');
       int asciiCharWidth = asciiCharLines[0].length();
 
+      // If the current line width will exceed the max width, pushback the current lines and reset
       if (currentLineWidth + asciiCharWidth + 2 > maxWidth) {
-         for (std::string line : lines) {
-            std::cout << line << '\n';
+         for (std::string line : bannerLines) {
+            fullBanner.push_back(line);
          }
 
-         lines.fill("");
+         bannerLines.fill("");
          currentLineWidth = 0;
       }
 
-      for (int i = 0; i < lines.size(); i++) {
-         lines[i] += asciiCharLines[i];
+      for (int i = 0; i < asciiCharLines.size(); i++) {
+         bannerLines[i] += asciiCharLines[i];
       }
       currentLineWidth += asciiCharWidth;
    }
 
-   for (std::string line : lines) {
+   // Pushback any remaining lines
+   for (std::string line : bannerLines) {
+      fullBanner.push_back(line);
+   }
+
+   return fullBanner;
+}
+
+void printStaticBanner(std::vector<std::string> banner) {
+   for (std::string line : banner) {
       std::cout << line << '\n';
    }
 }
 
-void printScrollingBanner(std::string inputText, int maxWidth, int scrollingSpeed) {
-   std::array<std::string, 7> lines;
+void outputStaticBanner(std::vector<std::string> banner, std::string outputFileName) {
+   std::ofstream outputFile(outputFileName);
+   for (std::string line : banner) {
+      outputFile << line << '\n';
+   }
+   outputFile.close();
+}
 
-   for (int i = 0; i < lines.size(); i++) {
-      lines[i] += "                ";
+auto ExistingParentDirectory = CLI::Validator([](std::string &outputFileName) {
+   namespace fs = std::filesystem;
+   fs::path outputFilePath = outputFileName;
+   fs::path parentPath = outputFilePath.parent_path();
+
+   // Empty path means that no directory is given
+   // Return success if the parent path exists or the file is in the current dir.
+   if (parentPath.empty() || fs::exists(parentPath)) {
+      return "";
    }
 
-   for (char textChar : inputText) {
-      char inputChar = std::tolower(textChar);
+   throw CLI::ValidationError("Parent path does not exist", parentPath);
+}, "Check if the parent directory for a given path exists", "ExistingParentDirectory");
+
+void printScrollingBanner(std::string inputText, int maxWidth, int scrollingSpeed) {
+   std::array<std::string, 7> bannerLines;
+
+   for (int i = 0; i < bannerLines.size(); i++) {
+      bannerLines[i] += "                ";
+   }
+
+   for (char inputChar : inputText) {
       std::string asciiChar = ascii::character[inputChar];
       std::vector<std::string> asciiCharLines = splitString(asciiChar, '\n');
 
-      for (int i = 0; i < lines.size(); i++) {
-         lines[i] += asciiCharLines[i];
+      for (int i = 0; i < bannerLines.size(); i++) {
+         bannerLines[i] += asciiCharLines[i];
       }
    }
 
    std::vector<std::vector<std::string>> lineCharacters;
 
-   for (std::string line : lines) {
+   for (std::string line : bannerLines) {
       std::vector<std::string> textLine;
       int index = 0;
       
@@ -111,49 +144,48 @@ void printScrollingBanner(std::string inputText, int maxWidth, int scrollingSpee
 int main(int argc, char** argv) {
    CLI::App app{"A CLI tool to generate ASCII text banners."};
 
-   bool canOutputFile = false;
-   bool canScrollText = false;
-
-   CLI::Option* flagOutput = app.add_flag(
-      "-o,--output", canOutputFile,
-      "Write the ASCII text to an output file."
-   );
-
-   CLI::Option* flagScroll = app.add_flag(
-      "-s,--scroll", canScrollText,
-      "Display the ASCII text as a scrolling animation."
-   );
-
    std::string inputText;
-   int maxWidth;
-   int scrollingSpeed = 5;
+   CLI::Option* optionText = app.add_option(
+      "-i,--input,input", inputText,
+      "The input text string to render as an ASCII banner."
+   )->required();
 
-   // Get the maximum terminal width
+   int maxWidth;
+   // Get the maximum width of the terminal
    struct winsize size;
    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
    maxWidth = size.ws_col;
-
-   CLI::Option* optionText = app.add_option(
-      "-i,--input", inputText,
-      "The text to convert to ASCII."
-   )->required();
-
    CLI::Option* optionWidth = app.add_option(
       "-w,--width", maxWidth,
-      "The maximum width of the ASCII text."
-   )->transform(CLI::Range(15, maxWidth));
+      "The maximum width of the banner. Default to the terminal width."
+   )->check(CLI::Range(15, maxWidth));
 
-   CLI::Option* optionSpeed = app.add_option(
-      "-v,--speed", scrollingSpeed,
-      "The speed of the scrolling animation."
-   )->transform(CLI::Range(1, 10))->needs(flagScroll);
+   int scrollingSpeed;
+   CLI::Option* optionScroll = app.add_option(
+      "-s,--scroll", scrollingSpeed,
+      "Display the text with a scrolling animation. Specify a value to change the speed."
+   )->check(CLI::Range(1, 10))->expected(0, 1)->default_val(5);
+
+   std::string outputFileName;
+   CLI::Option* optionOutput = app.add_option(
+      "-o,--output", outputFileName,
+      "Write the ASCII banner to a file in addition to printing. Overwrites existing files."
+   )->check(ExistingParentDirectory);
 
    CLI11_PARSE(app, argc, argv);
+   
+   std::transform(inputText.begin(), inputText.end(), inputText.begin(), ::tolower);
 
-   if (canScrollText) {
+   if (optionScroll->count() > 0) {
       printScrollingBanner(inputText, maxWidth, scrollingSpeed);
    } else {
-      printNormalBanner(inputText, maxWidth);
+      std::vector<std::string> banner = buildStaticBanner(inputText, maxWidth);
+      printStaticBanner(banner);
+   }
+
+   if (!outputFileName.empty()) {
+      std::vector<std::string> banner = buildStaticBanner(inputText, maxWidth);
+      outputStaticBanner(banner, outputFileName);
    }
 
    return 0;

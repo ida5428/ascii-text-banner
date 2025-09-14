@@ -8,7 +8,7 @@ A lightweight C++ command-line tool for generating ASCII text banners.
 ## Features
 - Render text into ASCII art
 - Optional scrolling effect
-- Upcoming features: file output and support for multiple built-in and custom fonts!
+- Upcoming feature: support for multiple built-in and custom fonts!
 
 ## Dependencies
 - A C++17 (or newer) compiler
@@ -38,15 +38,14 @@ cmake --build build
 
 ### 5. Run the program:
 ```bash
-./build/main --input "Hello World!" -o
+./build/main -i "Hello World!" -o ascii/hello.txt
 ```
 ```bash
-./build/main -i "Some veryyyyyyy long text......" --scroll -v 10
+./build/main "Some veryyyyyyy long text......" --scroll 8
 ```
 
 > [!NOTE]
-> The `-o/--output` flag is not yet implemented and currently has no effect.  
-> Run with `-h` or `--help` for more details.
+> Run with the `-h` or `--help` flag for more details.
 
 ## License
 This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), and its file can be found [here](LICENSE).  
