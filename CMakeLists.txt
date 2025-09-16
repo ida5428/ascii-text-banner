@@ -9,6 +9,11 @@ target_include_directories(CLI11 INTERFACE
     ${CMAKE_SOURCE_DIR}/libs/CLI11/include
 )
 
-add_executable(main src/main.cpp src/ascii.cpp)
+add_library(tomlplusplus INTERFACE)
+target_include_directories(tomlplusplus INTERFACE
+    ${CMAKE_SOURCE_DIR}/libs/tomlplusplus/include
+)
 
-target_link_libraries(main PRIVATE CLI11)
+add_executable(main src/main.cpp src/ascii.cpp src/defaultFont.cpp)
+
+target_link_libraries(main PRIVATE CLI11 tomlplusplus)
