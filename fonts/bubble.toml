@@ -1,10 +1,10 @@
-symbol_width = 1
 character_height = 9
+symbol_width = 1
 
 "a" = '''
-          
-          
-          
+
+
+
  $$$$$$\  
  \____$$\ 
  $$$$$$$ |
